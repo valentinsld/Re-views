@@ -1,0 +1,12 @@
+$body-color: slateblue;
+
+body {
+  color: $body-color;
+  font-family: sans-serif;
+}
+
+canvas {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+}
