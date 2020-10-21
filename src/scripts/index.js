@@ -21,7 +21,7 @@ class ParentPoint {
     let coord = [[{ x: this.x, y: this.y }]];
 
     // Center point
-    const newChild = new Point(that.x, that.y, 1, this.json.sentiment);
+    const newChild = new Point(that.x, that.y, 1.1, this.json.sentiment);
     this.childs.push(newChild);
 
     this.depths.forEach((j, i) => {
@@ -69,7 +69,7 @@ class ParentPoint {
     });
 
     // console.log(coord);
-    console.log(this.childs);
+    // console.log(this.childs);
   }
   update(a, b) {
     this.childs.forEach((c) => {
@@ -119,7 +119,18 @@ class Point {
 }
 
 // data
-import json from "../assets/tenetBis.json";
+import tenet from "../assets/tenetBis.json";
+import avengers from "../assets/avengers.json";
+import starWars from "../assets/star_wars_rise_of_skywalker.json";
+import hollywood from "../assets/once_upon_a_time.json";
+import joker from "../assets/joker12.json";
+const jsons = {
+  tenet,
+  avengers,
+  starWars,
+  hollywood,
+  joker,
+};
 
 // init canvas
 const canvas = document.querySelector("canvas");
@@ -148,12 +159,18 @@ let vs = {
   cx: 20,
   cy: 32,
   reg: create,
+  json: "tenet",
+  solo: false,
 };
 
 gui.add(vs, "space", 0, 50);
 gui.add(vs, "size", 0, 50);
 gui.add(vs, "cx", 0, 50).onChange(create);
 gui.add(vs, "cy", 0, 50).onChange(create);
+gui.add(vs, "solo").onChange(create);
+gui
+  .add(vs, "json", ["tenet", "avengers", "starWars", "hollywood", "joker"])
+  .onChange(create);
 gui.add(vs, "reg");
 
 //        DRAWING
@@ -172,7 +189,7 @@ function create() {
     }
   }
 
-  json.forEach((e) => {
+  jsons[vs.json].forEach((e) => {
     let x, y;
     let d5;
 
@@ -216,12 +233,10 @@ function createPoint(e, x, y) {
   depthTab(e, tab);
   // console.log(tab);
 
-  const pp = new ParentPoint(x, y, e, tab);
-
-  // const point = new Point(x, y, 1, e.sentiment, undefined, [], 0, depthMax);
-  points.push(pp);
-
-  // child(e, x, y, 1);
+  if (tab[0].nb > 0 || vs.solo) {
+    const pp = new ParentPoint(x, y, e, tab);
+    points.push(pp);
+  }
 }
 
 function getDepth(obj) {
