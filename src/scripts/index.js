@@ -174,6 +174,12 @@ canvas.width = innerWidth;
 canvas.height = innerHeight;
 let cw = canvas.width;
 let ch = canvas.height;
+window.addEventListener("resize", () => {
+  canvas.width = innerWidth;
+  canvas.height = innerHeight;
+  cw = canvas.width;
+  ch = canvas.height;
+});
 
 // rect
 ctx.beginPath();
@@ -185,6 +191,7 @@ ctx.fill();
 ctx.closePath();
 
 // variables
+let vh = ch / 100;
 const dat = require("dat.gui");
 const gui = new dat.GUI();
 let vs = {
