@@ -10,4 +10,6 @@ canvas {
   position: absolute;
   width: 100%;
   height: 100%;
+  clip-path: inset(0 0 0 0);
+  transition: all 300ms ease-out;
 }

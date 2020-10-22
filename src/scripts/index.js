@@ -7,11 +7,12 @@ if (process.env.NODE_ENV === "development") {
 
 // circles
 class ParentPoint {
-  constructor(x, y, json, depths) {
+  constructor(x, y, json, depths, c1) {
     this.x = x;
     this.y = y;
     this.json = json;
     this.depths = depths;
+    this.colorFront = c1;
 
     this.childs = [];
 
@@ -22,7 +23,13 @@ class ParentPoint {
     let coord = [[{ x: this.x, y: this.y }]];
 
     // Center point
-    const newChild = new Point(that.x, that.y, 1.1, this.json.sentiment);
+    const newChild = new Point(
+      that.x,
+      that.y,
+      1.1,
+      this.json.sentiment,
+      this.colorFront
+    );
     this.childs.push(newChild);
 
     this.depths.forEach((j, i) => {
@@ -85,12 +92,19 @@ class ParentPoint {
   }
 }
 class Point {
-  constructor(x, y, size, sent) {
+  constructor(x, y, size, sent, c1) {
     this.x = x;
     this.y = y;
     this.size = size;
+    this.colorFront = c1;
 
     this.sentiment = sent;
+    this.hoverr = {
+      x1: cw / 2 + vs.space * this.x - vs.space / 2 - 1,
+      x2: cw / 2 + vs.space * this.x + vs.space / 2 + 1,
+      y1: ch / 2 + vs.space * this.y - vs.space / 2 - 1,
+      y2: ch / 2 + vs.space * this.y + vs.space / 2 + 1,
+    };
   }
   draw(space, size, d, ctx, hovPoint) {
     ctx.beginPath();
@@ -103,7 +117,7 @@ class Point {
 
     if (d) {
       if (this.sentiment == undefined) {
-        ctx.fillStyle = "#ffffff";
+        ctx.fillStyle = this.colorFront;
       } else {
         if (this.sentiment.global == "positive") {
           ctx.fillStyle = "green";
@@ -114,7 +128,7 @@ class Point {
         }
       }
     } else {
-      ctx.fillStyle = "#ffffff";
+      ctx.fillStyle = this.colorFront;
     }
 
     let sizez = this.size * size;
@@ -133,18 +147,22 @@ class Point {
     ctx.closePath();
   }
   hover(a, b) {
-    const cx = cw / 2 + vs.space * this.x;
-    const cy = ch / 2 + vs.space * this.y;
     if (
-      a > cx - vs.space / 2 - 1 &&
-      a < cx + vs.space / 2 + 1 &&
-      b > cy - vs.space / 2 - 1 &&
-      b < cy + vs.space / 2 + 1
+      a > this.hoverr.x1 &&
+      a < this.hoverr.x2 &&
+      b > this.hoverr.y1 &&
+      b < this.hoverr.y2
     ) {
       return true;
     } else {
       return false;
     }
+  }
+}
+class BackPoint {
+  constructor(x, y) {
+    this.x = x;
+    this.y = y;
   }
 }
 
@@ -154,50 +172,30 @@ import avengers from "../assets/avengers.json";
 import starWars from "../assets/star_wars_rise_of_skywalker.json";
 import hollywood from "../assets/once_upon_a_time.json";
 import joker from "../assets/joker12.json";
-const jsons = {
-  tenet,
-  avengers,
-  starWars,
-  hollywood,
-  joker,
-};
 
 // variables
 // let vh = ch / 100;
-// const dat = require("dat.gui");
-// const gui = new dat.GUI();
 let vs = {
   space: 15,
   size: 10,
   cx: 20,
   cy: 32,
-  // reg: create,
-  json: "tenet",
   solo: true,
 };
-
-// gui.add(vs, "space", 0, 50);
-// gui.add(vs, "size", 0, 50);
-// gui.add(vs, "cx", 0, 50).onChange(create);
-// gui.add(vs, "cy", 0, 50).onChange(create);
-// gui.add(vs, "solo").onChange(create);
-// // gui
-// //   .add(vs, "json", ["tenet", "avengers", "starWars", "hollywood", "joker"])
-// //   .onChange(create);
-// gui.add(vs, "reg");
-
 
 let cw = innerWidth;
 let ch = innerHeight;
 
 class Paint {
-  constructor(canvas, json) {
+  constructor(canvas, json, c1, c2) {
     // init this.canvas
     this.json = json;
+    this.colorBack = c1;
+    this.colorFront = c2;
 
     this.canvas = document.querySelector(canvas);
     this.ctx = this.canvas.getContext("2d");
-    this.ctx.fillStyle = "#000000";
+    this.ctx.fillStyle = this.colorBack;
     this.ctx.rect(0, 0, cw, ch);
     this.ctx.fill();
 
@@ -218,30 +216,35 @@ class Paint {
     this.pointsBack = [];
     this.hovPoint;
 
-
     this.create();
     const update = () => {
       requestAnimationFrame(update);
-    
-      this.ctx.fillStyle = "#000000";
-      this.ctx.globalAlpha = 0.4;
-      this.ctx.rect(0, 0, cw, ch);
-      this.ctx.fill();
 
-      this.ctx.globalAlpha = 1;
-    
-      this.pointsBack.forEach((p) => {
-        p.draw(vs.space, vs.size, false, this.ctx);
-      });
-    
-      this.points.forEach((p) => {
-        p.update(vs.space, vs.size, false, this.ctx, this.hovPoint);
-      });
-    
-      if (this.hovPoint) {
-        this.hovPoint.update(vs.space, vs.size, true, this.ctx);
+      if (!moved) {
+        this.ctx.fillStyle = this.colorBack;
+        this.ctx.globalAlpha = 0.3;
+        this.ctx.rect(0, 0, cw, ch);
+        this.ctx.fill();
+
+        this.ctx.globalAlpha = 1;
+
+        this.pointsBack.forEach((p) => {
+          // p.draw(vs.space, vs.size, false, this.ctx);
+          this.ctx.beginPath();
+          this.ctx.fillStyle = this.colorFront;
+          this.ctx.rect(cw / 2 + vs.space * p.x, ch / 2 + vs.space * p.y, 1, 1);
+          this.ctx.fill();
+          this.ctx.closePath();
+        });
+
+        this.points.forEach((p) => {
+          p.update(vs.space, vs.size, false, this.ctx, this.hovPoint);
+        });
+
+        if (this.hovPoint) {
+          this.hovPoint.update(vs.space, vs.size, true, this.ctx);
+        }
       }
-    
     };
     requestAnimationFrame(update);
 
@@ -266,7 +269,6 @@ class Paint {
       }
     });
 
-    // this.getDepth = this.getDepth.bind(this);
   }
   create() {
     console.log("=======");
@@ -275,7 +277,7 @@ class Paint {
 
     for (let l = -vs.cx; l < vs.cx; l++) {
       for (let h = -vs.cy; h < vs.cy; h++) {
-        this.pointsBack.push(new Point(l, h, -1));
+        this.pointsBack.push(new BackPoint(l, h));
       }
     }
 
@@ -290,7 +292,7 @@ class Paint {
 
         let depthMax = (getDepth(e) * 2) / 3;
 
-        function getDepth (obj) {
+        function getDepth(obj) {
           var depth = 0;
           if (obj.replies) {
             obj.replies.forEach(function (d) {
@@ -336,7 +338,7 @@ class Paint {
     this.depthTab(e, tab);
 
     if (tab[0].nb > 0 || vs.solo) {
-      const pp = new ParentPoint(x, y, e, tab);
+      const pp = new ParentPoint(x, y, e, tab, this.colorFront);
       this.points.push(pp);
     }
   }
@@ -420,7 +422,6 @@ class Paint {
       }
     }
   }
-
 }
 
 function directionBis(a) {
@@ -452,5 +453,59 @@ function directionBis(a) {
   }
 }
 
-const tenetPaint = new Paint('#tenet', tenet, "#000000", "#ffffff");
-const jokerPaint = new Paint('#joker', joker, "#000000", "#ffffff");
+const tenetPaint = new Paint("#tenet", tenet, "#ffffff", "#000000");
+const jokerPaint = new Paint("#joker", joker, "#000000", "#ffffff");
+
+//       Change
+////////////////////////////////
+
+let moved,
+  close = false;
+window.addEventListener("mousedown", () => {
+  moved = true;
+});
+window.addEventListener("mousemove", () => {
+  if (moved) {
+    // console.log("moved");
+
+    jokerPaint.canvas.style.clipPath = `inset(0 ${
+      cw - lerp(mouse.prev[0], mouse[0], 0.1)
+    }px 0 0)`;
+    document.querySelector("body").style.cursor = "grabbing";
+    jokerPaint.canvas.style.transition = "none";
+  } else {
+    if (mouse[0] > cw - 50 && !close) {
+      jokerPaint.canvas.style.clipPath = "inset(0 60px 0 0)";
+      document.querySelector("body").style.cursor = "grab";
+    } else if (mouse[0] < 50 && close) {
+      jokerPaint.canvas.style.clipPath = `inset(0 ${cw - 60}px 0 0)`;
+      document.querySelector("body").style.cursor = "grab";
+    } else {
+      if (!close) {
+        jokerPaint.canvas.style.clipPath = "inset(0 0 0 0)";
+      } else {
+        jokerPaint.canvas.style.clipPath = `inset(0 ${cw}px 0 0)`;
+      }
+    }
+  }
+});
+window.addEventListener("mouseup", () => {
+  if (moved) {
+    if (mouse[0] > cw / 2) {
+      jokerPaint.canvas.style.transition = "all 700ms ease-out";
+      jokerPaint.canvas.style.clipPath = "inset(0 0 0 0)";
+      close = false;
+    } else {
+      jokerPaint.canvas.style.transition = "all 700ms ease-out";
+      jokerPaint.canvas.style.clipPath = "inset(0 100% 0 0)";
+      close = true;
+    }
+
+    document.querySelector("body").style.cursor = "initial";
+    moved = false;
+  }
+});
+
+function lerp(start, end, amt) {
+  return (1 - amt) * start + amt * end;
+}
