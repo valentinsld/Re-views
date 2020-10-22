@@ -1,4 +1,6 @@
 import "../styles/index.scss";
+// import mouse from "mouse-position";
+var mouse = require("../../node_modules/mouse-position/index")();
 
 if (process.env.NODE_ENV === "development") {
   require("../index.html");
@@ -71,10 +73,19 @@ class ParentPoint {
     // console.log(coord);
     // console.log(this.childs);
   }
-  update(a, b) {
+  update(a, b, d = false) {
     this.childs.forEach((c) => {
-      c.draw(a, b);
+      c.draw(a, b, d);
     });
+  }
+  hover(a, b) {
+    for (let i = 0; i < this.childs.length; i++) {
+      const hov = this.childs[i].hover(a, b);
+
+      if (hov) {
+        return true;
+      }
+    }
   }
 }
 class Point {
@@ -85,21 +96,30 @@ class Point {
 
     this.sentiment = sent;
   }
-  draw(space, size) {
+  draw(space, size, d) {
     ctx.beginPath();
-    ctx.fillStyle = "#ffffff";
 
-    // if (this.sentiment == undefined) {
-    //   ctx.fillStyle = "#ffffff";
-    // } else {
-    //   if (this.sentiment.global == "positive") {
-    //     ctx.fillStyle = "green";
-    //   } else if (this.sentiment.global == "mixed") {
-    //     ctx.fillStyle = "orange";
-    //   } else {
-    //     ctx.fillStyle = "red";
-    //   }
-    // }
+    if (d || hovPoint == undefined || this.size < 0) {
+      ctx.globalAlpha = 1;
+    } else {
+      ctx.globalAlpha = 0.5;
+    }
+
+    if (d) {
+      if (this.sentiment == undefined) {
+        ctx.fillStyle = "#ffffff";
+      } else {
+        if (this.sentiment.global == "positive") {
+          ctx.fillStyle = "green";
+        } else if (this.sentiment.global == "mixed") {
+          ctx.fillStyle = "orange";
+        } else {
+          ctx.fillStyle = "red";
+        }
+      }
+    } else {
+      ctx.fillStyle = "#ffffff";
+    }
 
     let sizez = this.size * size;
     if (sizez < 1) {
@@ -115,6 +135,20 @@ class Point {
     ctx.fill();
 
     ctx.closePath();
+  }
+  hover(a, b) {
+    const cx = cw / 2 + vs.space * this.x;
+    const cy = ch / 2 + vs.space * this.y;
+    if (
+      a > cx - vs.space / 2 - 1 &&
+      a < cx + vs.space / 2 + 1 &&
+      b > cy - vs.space / 2 - 1 &&
+      b < cy + vs.space / 2 + 1
+    ) {
+      return true;
+    } else {
+      return false;
+    }
   }
 }
 
@@ -180,6 +214,7 @@ let points = [];
 let pointsBack = [];
 
 function create() {
+  console.log("=======");
   points = [];
   pointsBack = [];
 
@@ -193,14 +228,16 @@ function create() {
     let x, y;
     let d5;
 
-    for (let l = 0; l < 10; l++) {
+    for (let l = 0; l < 20; l++) {
       d5 = true;
       x = Math.floor(Math.random() * vs.cx * 2 - vs.cx);
       y = Math.floor(Math.random() * vs.cy * 2 - vs.cy);
 
+      let depthMax = (getDepth(e) * 2) / 3;
+
       points.forEach((p) => {
         const dist = Math.sqrt(Math.pow(x - p.x, 2) + Math.pow(y - p.y, 2));
-        if (dist < 2) {
+        if (dist < depthMax) {
           d5 = false;
         }
       });
@@ -221,7 +258,6 @@ create();
 
 function createPoint(e, x, y) {
   //calculer profondeur
-  let depthMax = getDepth(e);
 
   let tab = [
     { nb: 0, elem: [] },
@@ -349,19 +385,6 @@ function child(e, x, y, a) {
       for (let i = 0; i < points.length; i++) {
         if (points[i].x == x1 && points[i].y == y1) {
           console.log(`break`);
-
-          // for (let l = 0; l < 8; l++) {
-          //   const dir = direction(l);
-          //   let x1 = x + dir.x;
-          //   let y1 = y + dir.y;
-          //   let overlap = false
-
-          //   for(let o = o ; o < points.length ; o++) {
-          //     if (points[i].x == x1 && points[i].y == y1) {
-          //   }
-
-          // }
-
           break;
         }
       }
@@ -460,6 +483,33 @@ const update = () => {
     p.update(vs.space, vs.size);
   });
 
+  if (hovPoint) {
+    hovPoint.update(vs.space, vs.size, true);
+  }
+
   time += 0.01;
 };
 requestAnimationFrame(update);
+
+//      Mouse pos
+/////////////////////////
+let hovPoint;
+window.addEventListener("mousemove", () => {
+  // console.log(`Pos : ${mouse[0]}, ${mouse[1]}`);
+  let hov = false;
+
+  points.forEach((p) => {
+    const h = p.hover(mouse[0], mouse[1]);
+
+    if (h) {
+      document.querySelector("body").style.cursor = "pointer";
+      hovPoint = p;
+      hov = true;
+    }
+  });
+
+  if (!hov) {
+    document.querySelector("body").style.cursor = "initial";
+    hovPoint = undefined;
+  }
+});
