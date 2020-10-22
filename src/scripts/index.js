@@ -1,12 +1,11 @@
 import "../styles/index.scss";
-// import mouse from "mouse-position";
 var mouse = require("../../node_modules/mouse-position/index")();
 
 if (process.env.NODE_ENV === "development") {
   require("../index.html");
 }
 
-//circle
+// circles
 class ParentPoint {
   constructor(x, y, json, depths) {
     this.x = x;
@@ -69,13 +68,10 @@ class ParentPoint {
 
       coord.push(newCoor);
     });
-
-    // console.log(coord);
-    // console.log(this.childs);
   }
-  update(a, b, d = false) {
+  update(a, b, d = false, ctx, hov) {
     this.childs.forEach((c) => {
-      c.draw(a, b, d);
+      c.draw(a, b, d, ctx, hov);
     });
   }
   hover(a, b) {
@@ -96,7 +92,7 @@ class Point {
 
     this.sentiment = sent;
   }
-  draw(space, size, d) {
+  draw(space, size, d, ctx, hovPoint) {
     ctx.beginPath();
 
     if (d || hovPoint == undefined || this.size < 0) {
@@ -166,205 +162,256 @@ const jsons = {
   joker,
 };
 
-// init canvas
-const canvas = document.querySelector("canvas");
-const ctx = canvas.getContext("2d");
-
-canvas.width = innerWidth;
-canvas.height = innerHeight;
-let cw = canvas.width;
-let ch = canvas.height;
-window.addEventListener("resize", () => {
-  canvas.width = innerWidth;
-  canvas.height = innerHeight;
-  cw = canvas.width;
-  ch = canvas.height;
-});
-
-// rect
-ctx.beginPath();
-
-ctx.fillStyle = "#000000";
-ctx.rect(0, 0, cw, ch);
-ctx.fill();
-
-ctx.closePath();
-
 // variables
-let vh = ch / 100;
-const dat = require("dat.gui");
-const gui = new dat.GUI();
+// let vh = ch / 100;
+// const dat = require("dat.gui");
+// const gui = new dat.GUI();
 let vs = {
   space: 15,
   size: 10,
   cx: 20,
   cy: 32,
-  reg: create,
+  // reg: create,
   json: "tenet",
-  solo: false,
+  solo: true,
 };
 
-gui.add(vs, "space", 0, 50);
-gui.add(vs, "size", 0, 50);
-gui.add(vs, "cx", 0, 50).onChange(create);
-gui.add(vs, "cy", 0, 50).onChange(create);
-gui.add(vs, "solo").onChange(create);
-gui
-  .add(vs, "json", ["tenet", "avengers", "starWars", "hollywood", "joker"])
-  .onChange(create);
-gui.add(vs, "reg");
+// gui.add(vs, "space", 0, 50);
+// gui.add(vs, "size", 0, 50);
+// gui.add(vs, "cx", 0, 50).onChange(create);
+// gui.add(vs, "cy", 0, 50).onChange(create);
+// gui.add(vs, "solo").onChange(create);
+// // gui
+// //   .add(vs, "json", ["tenet", "avengers", "starWars", "hollywood", "joker"])
+// //   .onChange(create);
+// gui.add(vs, "reg");
 
-//        DRAWING
-////////////////////////////////
 
-let points = [];
-let pointsBack = [];
+let cw = innerWidth;
+let ch = innerHeight;
 
-function create() {
-  console.log("=======");
-  points = [];
-  pointsBack = [];
+class Paint {
+  constructor(canvas, json) {
+    // init this.canvas
+    this.json = json;
 
-  for (let l = -vs.cx; l < vs.cx; l++) {
-    for (let h = -vs.cy; h < vs.cy; h++) {
-      pointsBack.push(new Point(l, h, -1));
-    }
-  }
+    this.canvas = document.querySelector(canvas);
+    this.ctx = this.canvas.getContext("2d");
+    this.ctx.fillStyle = "#000000";
+    this.ctx.rect(0, 0, cw, ch);
+    this.ctx.fill();
 
-  jsons[vs.json].forEach((e) => {
-    let x, y;
-    let d5;
+    this.canvas.width = innerWidth;
+    this.canvas.height = innerHeight;
 
-    for (let l = 0; l < 20; l++) {
-      d5 = true;
-      x = Math.floor(Math.random() * vs.cx * 2 - vs.cx);
-      y = Math.floor(Math.random() * vs.cy * 2 - vs.cy);
+    window.addEventListener("resize", () => {
+      this.canvas.width = innerWidth;
+      this.canvas.height = innerHeight;
+      cw = innerWidth;
+      ch = innerHeight;
+    });
 
-      let depthMax = (getDepth(e) * 2) / 3;
+    //        DRAWING
+    ////////////////////////////////
 
-      points.forEach((p) => {
-        const dist = Math.sqrt(Math.pow(x - p.x, 2) + Math.pow(y - p.y, 2));
-        if (dist < depthMax) {
-          d5 = false;
+    this.points = [];
+    this.pointsBack = [];
+    this.hovPoint;
+
+
+    this.create();
+    const update = () => {
+      requestAnimationFrame(update);
+    
+      this.ctx.fillStyle = "#000000";
+      this.ctx.globalAlpha = 0.4;
+      this.ctx.rect(0, 0, cw, ch);
+      this.ctx.fill();
+
+      this.ctx.globalAlpha = 1;
+    
+      this.pointsBack.forEach((p) => {
+        p.draw(vs.space, vs.size, false, this.ctx);
+      });
+    
+      this.points.forEach((p) => {
+        p.update(vs.space, vs.size, false, this.ctx, this.hovPoint);
+      });
+    
+      if (this.hovPoint) {
+        this.hovPoint.update(vs.space, vs.size, true, this.ctx);
+      }
+    
+    };
+    requestAnimationFrame(update);
+
+    //      Mouse pos
+    /////////////////////////
+    this.canvas.addEventListener("mousemove", () => {
+      let hov = false;
+
+      this.points.forEach((p) => {
+        const h = p.hover(mouse[0], mouse[1]);
+
+        if (h) {
+          document.querySelector("body").style.cursor = "pointer";
+          this.hovPoint = p;
+          hov = true;
         }
       });
+
+      if (!hov) {
+        document.querySelector("body").style.cursor = "initial";
+        this.hovPoint = undefined;
+      }
+    });
+
+    // this.getDepth = this.getDepth.bind(this);
+  }
+  create() {
+    console.log("=======");
+    this.points = [];
+    this.pointsBack = [];
+
+    for (let l = -vs.cx; l < vs.cx; l++) {
+      for (let h = -vs.cy; h < vs.cy; h++) {
+        this.pointsBack.push(new Point(l, h, -1));
+      }
+    }
+
+    this.json.forEach((e) => {
+      let x, y;
+      let d5;
+
+      for (let l = 0; l < 20; l++) {
+        d5 = true;
+        x = Math.floor(Math.random() * vs.cx * 2 - vs.cx);
+        y = Math.floor(Math.random() * vs.cy * 2 - vs.cy);
+
+        let depthMax = (getDepth(e) * 2) / 3;
+
+        function getDepth (obj) {
+          var depth = 0;
+          if (obj.replies) {
+            obj.replies.forEach(function (d) {
+              var tmpDepth = getDepth(d);
+              if (tmpDepth > depth) {
+                depth = tmpDepth;
+              }
+            });
+          }
+          return 1 + depth;
+        }
+
+        this.points.forEach((p) => {
+          const dist = Math.sqrt(Math.pow(x - p.x, 2) + Math.pow(y - p.y, 2));
+          if (dist < depthMax) {
+            d5 = false;
+          }
+        });
+
+        if (d5) {
+          break;
+        }
+      }
 
       if (d5) {
-        break;
-      }
-    }
-
-    if (d5) {
-      createPoint(e, x, y);
-    } else {
-      console.log("NOPE");
-    }
-  });
-}
-create();
-
-function createPoint(e, x, y) {
-  //calculer profondeur
-
-  let tab = [
-    { nb: 0, elem: [] },
-    { nb: 0, elem: [] },
-    { nb: 0, elem: [] },
-    { nb: 0, elem: [] },
-    { nb: 0, elem: [] },
-  ];
-  depthTab(e, tab);
-  // console.log(tab);
-
-  if (tab[0].nb > 0 || vs.solo) {
-    const pp = new ParentPoint(x, y, e, tab);
-    points.push(pp);
-  }
-}
-
-function getDepth(obj) {
-  var depth = 0;
-  if (obj.replies) {
-    obj.replies.forEach(function (d) {
-      var tmpDepth = getDepth(d);
-      if (tmpDepth > depth) {
-        depth = tmpDepth;
+        this.createPoint(e, x, y);
+      } else {
+        console.log("NOPE");
       }
     });
   }
-  return 1 + depth;
-}
 
-function depthTab(obj, tab) {
-  if (obj.replies) {
-    obj.replies.forEach((r) => {
-      tab[0].nb += 1;
-      tab[0].elem.push(r);
-    });
+  createPoint(e, x, y) {
+    //calculer profondeur
+
+    let tab = [
+      { nb: 0, elem: [] },
+      { nb: 0, elem: [] },
+      { nb: 0, elem: [] },
+      { nb: 0, elem: [] },
+      { nb: 0, elem: [] },
+    ];
+    this.depthTab(e, tab);
+
+    if (tab[0].nb > 0 || vs.solo) {
+      const pp = new ParentPoint(x, y, e, tab);
+      this.points.push(pp);
+    }
   }
 
-  for (let i = 0; i < tab[0].nb; i++) {
-    if (obj.replies[i].replies) {
-      obj.replies[i].replies.forEach((r) => {
-        tab[1].nb += 1;
-        tab[1].elem.push(r);
+  depthTab(obj, tab) {
+    if (obj.replies) {
+      obj.replies.forEach((r) => {
+        tab[0].nb += 1;
+        tab[0].elem.push(r);
       });
     }
-  }
 
-  for (let i = 0; i < tab[0].nb; i++) {
-    if (obj.replies[i].replies) {
-      for (let l = 0; l < tab[1].nb; l++) {
-        if (obj.replies[i].replies[l] && obj.replies[i].replies[l].replies) {
-          obj.replies[i].replies[l].replies.forEach((r) => {
-            tab[2].nb += 1;
-            tab[2].elem.push(r);
-          });
+    for (let i = 0; i < tab[0].nb; i++) {
+      if (obj.replies[i].replies) {
+        obj.replies[i].replies.forEach((r) => {
+          tab[1].nb += 1;
+          tab[1].elem.push(r);
+        });
+      }
+    }
+
+    for (let i = 0; i < tab[0].nb; i++) {
+      if (obj.replies[i].replies) {
+        for (let l = 0; l < tab[1].nb; l++) {
+          if (obj.replies[i].replies[l] && obj.replies[i].replies[l].replies) {
+            obj.replies[i].replies[l].replies.forEach((r) => {
+              tab[2].nb += 1;
+              tab[2].elem.push(r);
+            });
+          }
         }
       }
     }
-  }
 
-  for (let i = 0; i < tab[0].nb; i++) {
-    if (obj.replies[i].replies) {
-      for (let l = 0; l < tab[1].nb; l++) {
-        if (obj.replies[i].replies[l] && obj.replies[i].replies[l].replies) {
-          for (let n = 0; n < tab[2].nb; n++) {
-            if (
-              obj.replies[i].replies[l].replies[n] &&
-              obj.replies[i].replies[l].replies[n].replies
-            ) {
-              obj.replies[i].replies[l].replies[n].replies.forEach((r) => {
-                tab[3].nb += 1;
-                tab[3].elem.push(r);
-              });
+    for (let i = 0; i < tab[0].nb; i++) {
+      if (obj.replies[i].replies) {
+        for (let l = 0; l < tab[1].nb; l++) {
+          if (obj.replies[i].replies[l] && obj.replies[i].replies[l].replies) {
+            for (let n = 0; n < tab[2].nb; n++) {
+              if (
+                obj.replies[i].replies[l].replies[n] &&
+                obj.replies[i].replies[l].replies[n].replies
+              ) {
+                obj.replies[i].replies[l].replies[n].replies.forEach((r) => {
+                  tab[3].nb += 1;
+                  tab[3].elem.push(r);
+                });
+              }
             }
           }
         }
       }
     }
-  }
 
-  for (let i = 0; i < tab[0].nb; i++) {
-    if (obj.replies[i].replies) {
-      for (let l = 0; l < tab[1].nb; l++) {
-        if (obj.replies[i].replies[l] && obj.replies[i].replies[l].replies) {
-          for (let n = 0; n < tab[2].nb; n++) {
-            if (
-              obj.replies[i].replies[l].replies[n] &&
-              obj.replies[i].replies[l].replies[n].replies
-            ) {
-              for (let m = 0; m < tab[3].nb; m++) {
-                if (
-                  obj.replies[i].replies[l].replies[n].replies[m] &&
-                  obj.replies[i].replies[l].replies[n].replies[m].replies
-                ) {
-                  obj.replies[i].replies[l].replies[n].replies[
-                    m
-                  ].replies.forEach((r) => {
-                    tab[4].nb += 1;
-                    tab[4].elem.push(r);
-                  });
+    for (let i = 0; i < tab[0].nb; i++) {
+      if (obj.replies[i].replies) {
+        for (let l = 0; l < tab[1].nb; l++) {
+          if (obj.replies[i].replies[l] && obj.replies[i].replies[l].replies) {
+            for (let n = 0; n < tab[2].nb; n++) {
+              if (
+                obj.replies[i].replies[l].replies[n] &&
+                obj.replies[i].replies[l].replies[n].replies
+              ) {
+                for (let m = 0; m < tab[3].nb; m++) {
+                  if (
+                    obj.replies[i].replies[l].replies[n].replies[m] &&
+                    obj.replies[i].replies[l].replies[n].replies[m].replies
+                  ) {
+                    obj.replies[i].replies[l].replies[n].replies[
+                      m
+                    ].replies.forEach((r) => {
+                      tab[4].nb += 1;
+                      tab[4].elem.push(r);
+                    });
+                  }
                 }
               }
             }
@@ -373,75 +420,7 @@ function depthTab(obj, tab) {
       }
     }
   }
-}
 
-function child(e, x, y, a) {
-  if (e.hasOwnProperty("replies")) {
-    e.replies.forEach((r) => {
-      const dir = direction();
-      let x1 = x + dir.x;
-      let y1 = y + dir.y;
-
-      if (!(x1 < vs.cx && x1 > -vs.cx)) {
-        x1 = x + dir.x * -1;
-      }
-      if (!(y1 < vs.cy && y1 > -vs.cy)) {
-        y1 = y + dir.y * -1;
-      }
-
-      for (let i = 0; i < points.length; i++) {
-        if (points[i].x == x1 && points[i].y == y1) {
-          console.log(`break`);
-          break;
-        }
-      }
-
-      points.push(new Point(x1, y1, Math.pow(0.8, a), r.sentiment, a));
-
-      child(r, x1, y1, a + 1);
-    });
-  }
-}
-
-function direction(a) {
-  let d;
-  if (a == undefined) {
-    d = Math.floor(Math.random() * 7) + 1;
-  } else {
-    d = a;
-  }
-
-  switch (d) {
-    case 1:
-      return { x: 0, y: -1 };
-      break;
-    case 2:
-      return { x: 1, y: -1 };
-      break;
-    case 3:
-      return { x: 1, y: 0 };
-      break;
-    case 4:
-      return { x: 1, y: 1 };
-      break;
-    case 5:
-      return { x: 0, y: 1 };
-      break;
-    case 6:
-      return { x: -1, y: 1 };
-      break;
-    case 7:
-      return { x: -1, y: 0 };
-      break;
-    case 8:
-      return { x: -1, y: -1 };
-      break;
-
-    default:
-      console.error("error direction");
-      return { x: 0, y: 0 };
-      break;
-  }
 }
 
 function directionBis(a) {
@@ -473,50 +452,5 @@ function directionBis(a) {
   }
 }
 
-// loop
-let time = 0;
-const update = () => {
-  requestAnimationFrame(update);
-
-  ctx.fillStyle = "#000000";
-  ctx.rect(0, 0, cw, ch);
-  ctx.fill();
-
-  pointsBack.forEach((p) => {
-    p.draw(vs.space, vs.size);
-  });
-
-  points.forEach((p) => {
-    p.update(vs.space, vs.size);
-  });
-
-  if (hovPoint) {
-    hovPoint.update(vs.space, vs.size, true);
-  }
-
-  time += 0.01;
-};
-requestAnimationFrame(update);
-
-//      Mouse pos
-/////////////////////////
-let hovPoint;
-window.addEventListener("mousemove", () => {
-  // console.log(`Pos : ${mouse[0]}, ${mouse[1]}`);
-  let hov = false;
-
-  points.forEach((p) => {
-    const h = p.hover(mouse[0], mouse[1]);
-
-    if (h) {
-      document.querySelector("body").style.cursor = "pointer";
-      hovPoint = p;
-      hov = true;
-    }
-  });
-
-  if (!hov) {
-    document.querySelector("body").style.cursor = "initial";
-    hovPoint = undefined;
-  }
-});
+const tenetPaint = new Paint('#tenet', tenet, "#000000", "#ffffff");
+const jokerPaint = new Paint('#joker', joker, "#000000", "#ffffff");
