@@ -701,41 +701,33 @@ btn.addEventListener("click", (e) => {
       {
         scale: "1",
         opacity: 1,
-        duration: 0.8,
-        stagger: 0.05,
-        ease: "power3.in",
-      },
-      "+=1"
+        duration: 1.2,
+        ease: "power3.inOut",
+      }
     )
     .to(
       "#tenet",
       {
         scale: "1",
         opacity: 1,
-        duration: 0.8,
-        stagger: 0.05,
-        ease: "power3.in",
-      },
-      "+=1"
-    )
-    .to(
-      ".gradient",
-      {
-        opacity: 1,
-        duration: 0.4,
-        stagger: 0.05,
-        ease: "power3.in",
-      },
-      "+=1"
+        duration: 1.2,
+        ease: "power3.inOut",
+      }
     )
     .to(
       ".data",
       {
         opacity: 1,
-        duration: 0.4,
-        stagger: 0.05,
-        ease: "power3.in",
-      },
-      "+=1"
+        duration: 1,
+        ease: "power3.out",
+      }, '-=1'
+    )
+    .to(
+      ".gradient",
+      {
+        opacity: 1,
+        duration: 1,
+        ease: "power3.out",
+      }, '-=1'
     );
 });
