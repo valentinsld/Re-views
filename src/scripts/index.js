@@ -7,13 +7,18 @@ if (process.env.NODE_ENV === "development") {
 
 // circles
 class ParentPoint {
-  constructor(x, y, json, depths, c1, gs) {
+  constructor(x, y, json, depths, c1, gs, cp, cm, cn) {
     this.x = x;
     this.y = y;
     this.json = json;
     this.depths = depths;
     this.colorFront = c1;
+
     this.globalSentiment = gs;
+    this.cp = cp;
+    this.cm = cm;
+    this.cn = cn;
+    console.log(this.cp, this.cm, this.cn);
 
     this.childs = [];
 
@@ -79,7 +84,7 @@ class ParentPoint {
   }
   update(a, b, d = false, ctx, hov) {
     this.childs.forEach((c) => {
-      c.draw(a, b, d, ctx, hov);
+      c.draw(a, b, d, ctx, hov, this.cp, this.cm, this.cn);
     });
   }
   hover(a, b) {
@@ -88,6 +93,8 @@ class ParentPoint {
 
       if (hov) {
         // console.log(this.globalSentiment);
+        document.querySelector("#data-answer").innerHTML = this.childs.length;
+        document.querySelector("#data-sent").innerHTML = Math.floor(this.globalSentiment.positive * 100) + '%';
         return true;
       }
     }
@@ -108,7 +115,7 @@ class Point {
       y2: ch / 2 + vs.space * this.y + vs.space / 2 + 1,
     };
   }
-  draw(space, size, d, ctx, hovPoint) {
+  draw(space, size, d, ctx, hovPoint, cp, cm, cn) {
     ctx.beginPath();
 
     if (d || hovPoint == undefined || this.size < 0) {
@@ -122,11 +129,11 @@ class Point {
         ctx.fillStyle = this.colorFront;
       } else {
         if (this.sentiment.global == "positive") {
-          ctx.fillStyle = "green";
+          ctx.fillStyle = cp;
         } else if (this.sentiment.global == "mixed") {
-          ctx.fillStyle = "orange";
+          ctx.fillStyle = cm;
         } else {
-          ctx.fillStyle = "red";
+          ctx.fillStyle = cn;
         }
       }
     } else {
@@ -162,9 +169,10 @@ class Point {
   }
 }
 class BackPoint {
-  constructor(x, y) {
+  constructor(x, y, color) {
     this.x = x;
     this.y = y;
+    this.color = color;
   }
 }
 
@@ -189,11 +197,14 @@ let cw = innerWidth;
 let ch = innerHeight;
 
 class Paint {
-  constructor(canvas, json, c1, c2) {
+  constructor(canvas, json, c1, c2, cp, cm, cn) {
     // init this.canvas
     this.json = json;
     this.colorBack = c1;
     this.colorFront = c2;
+    this.cp = cp;
+    this.cm = cm;
+    this.cn = cn;
 
     this.canvas = document.querySelector(canvas);
     this.ctx = this.canvas.getContext("2d");
@@ -240,7 +251,16 @@ class Paint {
         });
 
         this.points.forEach((p) => {
-          p.update(vs.space, vs.size, false, this.ctx, this.hovPoint);
+          p.update(
+            vs.space,
+            vs.size,
+            false,
+            this.ctx,
+            this.hovPoint,
+            this.cp,
+            this.cm,
+            this.cn
+          );
         });
 
         if (this.hovPoint) {
@@ -255,10 +275,11 @@ class Paint {
     this.canvas.addEventListener("mousemove", () => {
       let hov = false;
 
-      this.points.forEach((p) => {
+      this.points.forEach((p, i) => {
         const h = p.hover(mouse[0], mouse[1]);
 
         if (h) {
+          document.querySelector("#data-name").innerHTML = 'OBJECT '+i;
           document.querySelector("body").style.cursor = "pointer";
           this.hovPoint = p;
           hov = true;
@@ -340,7 +361,17 @@ class Paint {
     this.depthTab(e, tab, tab2);
 
     if (tab[0].nb > 0 || vs.solo) {
-      const pp = new ParentPoint(x, y, e, tab, this.colorFront, tab2);
+      const pp = new ParentPoint(
+        x,
+        y,
+        e,
+        tab,
+        this.colorFront,
+        tab2,
+        this.cp,
+        this.cm,
+        this.cn
+      );
       this.points.push(pp);
     }
   }
@@ -490,41 +521,56 @@ function directionBis(a) {
   }
 }
 
-const tenetPaint = new Paint("#tenet", tenet, "#ffffff", "#000000");
-const jokerPaint = new Paint("#joker", joker, "#000000", "#ffffff");
+const tenetPaint = new Paint(
+  "#tenet",
+  tenet,
+  "#ffffff",
+  "#000000",
+  "#4A738C",
+  "#D6D6D6",
+  "#E7B88F"
+);
+const jokerPaint = new Paint(
+  "#joker",
+  joker,
+  "#000000",
+  "#ffffff",
+  "#D99E32",
+  "#ffffff",
+  "#A61B26"
+);
 
 //       Change
 ////////////////////////////////
 let moved,
   close = false;
+const jokerDiv = document.querySelector("#jokerDiv");
 window.addEventListener("mousedown", () => {
   moved = true;
-  document.querySelector("body").style.cursor = "grabbing";
+  // document.querySelector("body").style.cursor = "grabbing";
 });
 document.addEventListener("keydown", function () {
-  document.querySelector("body").style.cursor = "grabbing";
+  // document.querySelector("body").style.cursor = "grabbing";
 });
 window.addEventListener("mousemove", () => {
   if (moved) {
-    // console.log("moved");
-
-    jokerPaint.canvas.style.clipPath = `inset(0 ${
+    jokerDiv.style.clipPath = `inset(0 ${
       cw - lerp(mouse.prev[0], mouse[0], 0.01)
     }px 0 0)`;
     document.querySelector("body").style.cursor = "grabbing";
-    jokerPaint.canvas.style.transition = "none";
+    jokerDiv.style.transition = "none";
   } else {
     if (mouse[0] > cw - 50 && !close) {
-      jokerPaint.canvas.style.clipPath = "inset(0 60px 0 0)";
+      jokerDiv.style.clipPath = "inset(0 60px 0 0)";
       document.querySelector("body").style.cursor = "grab";
     } else if (mouse[0] < 50 && close) {
-      jokerPaint.canvas.style.clipPath = `inset(0 ${cw - 60}px 0 0)`;
+      jokerDiv.style.clipPath = `inset(0 ${cw - 60}px 0 0)`;
       document.querySelector("body").style.cursor = "grab";
     } else {
       if (!close) {
-        jokerPaint.canvas.style.clipPath = "inset(0 0 0 0)";
+        jokerDiv.style.clipPath = "inset(0 0 0 0)";
       } else {
-        jokerPaint.canvas.style.clipPath = `inset(0 ${cw}px 0 0)`;
+        jokerDiv.style.clipPath = `inset(0 ${cw}px 0 0)`;
       }
     }
   }
@@ -532,19 +578,23 @@ window.addEventListener("mousemove", () => {
 window.addEventListener("mouseup", () => {
   if (moved) {
     if (mouse[0] > cw / 2) {
-      jokerPaint.canvas.style.transition = "all 700ms ease-out";
-      jokerPaint.canvas.style.clipPath = "inset(0 0 0 0)";
+      jokerDiv.style.transition = "all 700ms ease-out";
+      jokerDiv.style.clipPath = "inset(0 0 0 0)";
       close = false;
+      console.log(document.querySelector("#data-movie"));
+      document.querySelector("#data-movie").innerHTML = "Joker";
     } else {
-      jokerPaint.canvas.style.transition = "all 700ms ease-out";
-      jokerPaint.canvas.style.clipPath = "inset(0 100% 0 0)";
+      jokerDiv.style.transition = "all 700ms ease-out";
+      jokerDiv.style.clipPath = "inset(0 100% 0 0)";
       close = true;
+      document.querySelector("#data-movie").innerHTML = "Tenet";
     }
 
     document.querySelector("body").style.cursor = "initial";
     moved = false;
   }
 });
+
 
 function lerp(start, end, amt) {
   return (1 - amt) * start + amt * end;
@@ -617,7 +667,6 @@ tl.to(
   );
 
 btn.addEventListener("click", (e) => {
-  console.log("click");
   tl.to(".background", {
     scale: 0.7,
     opacity: 0,
@@ -626,7 +675,13 @@ btn.addEventListener("click", (e) => {
   })
     .to(
       ".content",
-      { scale: 0.7, opacity: 0, duration: 1.4, ease: "power3.inOut" },
+      {
+        scale: 0.7,
+        opacity: 0,
+        duration: 1.4,
+        ease: "power3.inOut",
+        display: "none",
+      },
       "-=1.1"
     )
     .to(btn, { opacity: 0, duration: 0.6, ease: "power3.inOut" }, "-=1")
@@ -643,12 +698,44 @@ btn.addEventListener("click", (e) => {
     )
     .to(
       "#joker",
-      { scale: "1", opacity: 1, duration: 0.8, stagger: 0.05, ease: "power3.in" },
+      {
+        scale: "1",
+        opacity: 1,
+        duration: 0.8,
+        stagger: 0.05,
+        ease: "power3.in",
+      },
       "+=1"
     )
     .to(
       "#tenet",
-      { scale: "1", opacity: 1, duration: 0.8, stagger: 0.05, ease: "power3.in" },
+      {
+        scale: "1",
+        opacity: 1,
+        duration: 0.8,
+        stagger: 0.05,
+        ease: "power3.in",
+      },
+      "+=1"
+    )
+    .to(
+      ".gradient",
+      {
+        opacity: 1,
+        duration: 0.4,
+        stagger: 0.05,
+        ease: "power3.in",
+      },
+      "+=1"
+    )
+    .to(
+      ".data",
+      {
+        opacity: 1,
+        duration: 0.4,
+        stagger: 0.05,
+        ease: "power3.in",
+      },
       "+=1"
     );
 });

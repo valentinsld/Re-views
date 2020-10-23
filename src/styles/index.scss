@@ -1,17 +1,6 @@
 @import "../fonts/fonts.44cea94f.css";
 @import "style.e93aa29d.css";
 
-#canvas {
-  opacity: 0;
-  animation: cc 10ms ease forwards 1s;
-}
-
-@keyframes cc {
-  to {
-    opacity: 1;
-  }
-}
-
 canvas {
   position: absolute;
   width: 100%;
@@ -20,4 +9,10 @@ canvas {
   transition: all 500ms ease-out;
   opacity: 0;
   transform: scale(0.7);
+}
+
+#canvas > * {
+  position: absolute;
+  width: 100%;
+  height: 100%;
 }

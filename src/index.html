@@ -79,14 +79,58 @@
       </div>
       <div class="background">
         <video width="1920" height="1080" autoplay muted>
-          <source src="http://dataviz.valentinsld.fr/background3.0a710cce.mp4" type="video/mp4" />
+          <source
+            src="http://dataviz.valentinsld.fr/background3.0a710cce.mp4"
+            type="video/mp4"
+          />
         </video>
       </div>
     </main>
 
+        <div class="data">
+          <!-- <div class="data-00">
+            <div class="data-title">Mouse</div>
+            <div class="data-value">940Y, 231X</div>
+          </div> -->
+          <div class="data-01">
+            <div class="data-title">Movie</div>
+            <div class="data-value" id="data-movie">Joker</div>
+          </div>
+          <div class="data-02">
+            <div class="data-title">Name</div>
+            <div class="data-value" id="data-name">OBJECT 01</div>
+          </div>
+          <div class="data-03">
+            <div class="data-title">Answers</div>
+            <div class="data-value" id="data-answer">12</div>
+          </div>
+          <div class="data-04">
+            <div class="data-title">SENTIMENT</div>
+            <div class="data-value" id="data-sent">96%</div>
+          </div>
+        </div>
+
     <div id="canvas">
-      <canvas id="tenet"></canvas>
-      <canvas id="joker"></canvas>
+      <div>
+        <canvas id="tenet"></canvas>
+
+        <div class="gradient">
+          <div class="gradient-wrapper"></div>
+          <div class="gradient-text gradient-text2">
+            <span>Positive</span> <span>Negative</span>
+          </div>
+        </div>
+        
+      </div>
+      <div id="jokerDiv">
+        <canvas id="joker"></canvas>
+        <div class="gradient">
+          <div class="gradient-wrapper gradient-wrapper2"></div>
+          <div class="gradient-text">
+            <span>Positive</span> <span>Negative</span>
+          </div>
+        </div>
+      </div>
     </div>
 
     <!-- <script src="./src/main.js"></script> -->
