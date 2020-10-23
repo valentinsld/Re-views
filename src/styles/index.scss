@@ -1,12 +1,8 @@
-$body-color: slateblue;
-
-body {
-  color: $body-color;
-  font-family: sans-serif;
-  background-color: #000;
-}
+@import "../fonts/fonts.44cea94f.css";
+@import "style.e93aa29d.css";
 
 canvas {
+  display: none;
   position: absolute;
   width: 100%;
   height: 100%;

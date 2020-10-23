@@ -7,12 +7,13 @@ if (process.env.NODE_ENV === "development") {
 
 // circles
 class ParentPoint {
-  constructor(x, y, json, depths, c1) {
+  constructor(x, y, json, depths, c1, gs) {
     this.x = x;
     this.y = y;
     this.json = json;
     this.depths = depths;
     this.colorFront = c1;
+    this.globalSentiment = gs;
 
     this.childs = [];
 
@@ -86,6 +87,7 @@ class ParentPoint {
       const hov = this.childs[i].hover(a, b);
 
       if (hov) {
+        // console.log(this.globalSentiment);
         return true;
       }
     }
@@ -268,7 +270,6 @@ class Paint {
         this.hovPoint = undefined;
       }
     });
-
   }
   create() {
     console.log("=======");
@@ -335,19 +336,30 @@ class Paint {
       { nb: 0, elem: [] },
       { nb: 0, elem: [] },
     ];
-    this.depthTab(e, tab);
+    let tab2 = {};
+    this.depthTab(e, tab, tab2);
 
     if (tab[0].nb > 0 || vs.solo) {
-      const pp = new ParentPoint(x, y, e, tab, this.colorFront);
+      const pp = new ParentPoint(x, y, e, tab, this.colorFront, tab2);
       this.points.push(pp);
     }
   }
 
-  depthTab(obj, tab) {
+  depthTab(obj, tab, tab2) {
+    let positive = obj.sentiment.positive + obj.sentiment.neutral;
+    let negative = obj.sentiment.negative;
+    let total = 1;
+
     if (obj.replies) {
       obj.replies.forEach((r) => {
         tab[0].nb += 1;
         tab[0].elem.push(r);
+
+        if (r.sentiment && r.sentiment.positive != undefined) {
+          positive += r.sentiment.positive + r.sentiment.neutral;
+          negative += r.sentiment.negative;
+          total++;
+        }
       });
     }
 
@@ -356,6 +368,12 @@ class Paint {
         obj.replies[i].replies.forEach((r) => {
           tab[1].nb += 1;
           tab[1].elem.push(r);
+
+          if (r.sentiment && r.sentiment.positive != undefined) {
+            positive += r.sentiment.positive + r.sentiment.neutral;
+            negative += r.sentiment.negative;
+            total++;
+          }
         });
       }
     }
@@ -367,6 +385,11 @@ class Paint {
             obj.replies[i].replies[l].replies.forEach((r) => {
               tab[2].nb += 1;
               tab[2].elem.push(r);
+              if (r.sentiment && r.sentiment.positive != undefined) {
+                positive += r.sentiment.positive + r.sentiment.mixed;
+                negative += r.sentiment.negative;
+                total++;
+              }
             });
           }
         }
@@ -385,6 +408,11 @@ class Paint {
                 obj.replies[i].replies[l].replies[n].replies.forEach((r) => {
                   tab[3].nb += 1;
                   tab[3].elem.push(r);
+                  if (r.sentiment && r.sentiment.positive != undefined) {
+                    positive += r.sentiment.positive + r.sentiment.mixed;
+                    negative += r.sentiment.negative;
+                    total++;
+                  }
                 });
               }
             }
@@ -412,6 +440,12 @@ class Paint {
                     ].replies.forEach((r) => {
                       tab[4].nb += 1;
                       tab[4].elem.push(r);
+
+                      if (r.sentiment && r.sentiment.positive != undefined) {
+                        positive += r.sentiment.positive + r.sentiment.mixed;
+                        negative += r.sentiment.negative;
+                        total++;
+                      }
                     });
                   }
                 }
@@ -421,6 +455,9 @@ class Paint {
         }
       }
     }
+
+    tab2.positive = (total - negative) / total;
+    tab2.negative = negative / total;
   }
 }
 
@@ -458,18 +495,21 @@ const jokerPaint = new Paint("#joker", joker, "#000000", "#ffffff");
 
 //       Change
 ////////////////////////////////
-
 let moved,
   close = false;
 window.addEventListener("mousedown", () => {
   moved = true;
+  document.querySelector("html").style.cursor = "grabbing";
+});
+document.addEventListener("keydown", function () {
+  document.querySelector("body").style.cursor = "grabbing";
 });
 window.addEventListener("mousemove", () => {
   if (moved) {
     // console.log("moved");
 
     jokerPaint.canvas.style.clipPath = `inset(0 ${
-      cw - lerp(mouse.prev[0], mouse[0], 0.1)
+      cw - lerp(mouse.prev[0], mouse[0], 0.01)
     }px 0 0)`;
     document.querySelector("body").style.cursor = "grabbing";
     jokerPaint.canvas.style.transition = "none";
@@ -509,3 +549,62 @@ window.addEventListener("mouseup", () => {
 function lerp(start, end, amt) {
   return (1 - amt) * start + amt * end;
 }
+
+//        Add auto
+////////////////////////////////
+import io from "socket.io-client";
+
+const socket = io("http://localhost:3000");
+
+socket.on("msg", function (msg) {
+  console.log(msg);
+});
+
+
+//        Animation
+////////////////////////////////
+import gsap from "gsap";
+
+const tl = gsap.timeline();
+const lines = document.querySelectorAll(".content-sub .wrapper span");
+
+gsap.set(lines, { y: "100%" });
+gsap.set(".content-title span", { y: "100%" });
+gsap.set("rect", { opacity: 0 });
+gsap.set(".cta span", { opacity: 0 });
+
+tl.to(
+  ".content-title span",
+  { y: "0%", duration: 1.3, stagger: 0.15, ease: "power3.out" },
+  6
+)
+  .to(
+    "rect",
+    {
+      opacity: 1,
+      ease: "power3.out",
+      stagger: { from: "random", amount: "0.5", ease: "power3.inOut" },
+      duration: 0.01,
+    },
+    "-=1"
+  )
+  .to(
+    lines,
+    { y: "0%", duration: 1.2, stagger: 0.2, ease: "power3.out" },
+    "-=1"
+  )
+  .to(
+    ".background",
+    { opacity: 0.15, duration: 2, ease: "power3.out" },
+    "-=2.5"
+  )
+  .to(
+    ".cta span",
+    {
+      opacity: 1,
+      ease: "power3.out",
+      stagger: { from: "random", amount: "0.4" },
+      duration: 0.01,
+    },
+    "-=1"
+  );

@@ -1,0 +1,119 @@
+body {
+  width: 100vw;
+  height: 100vh;
+  overflow-x: hidden;
+  background-color: #000;
+  color: #fff;
+  font-family: Px Grotesk, Helvetica, sans-serif;
+}
+body a {
+  position: relative;
+  display: block;
+  text-decoration: none;
+  color: inherit;
+}
+body a:hover:after {
+  transform: scaleX(1);
+}
+body a:after {
+  content: "";
+  position: absolute;
+  bottom: -3px;
+  left: 0;
+  width: 100%;
+  height: 1px;
+  transform-origin: left;
+  background-color: #fff;
+  transform: scaleX(0);
+  transition: transform 0.6s cubic-bezier(0.165, 0.84, 0.44, 1);
+}
+body .wrapper {
+  overflow: hidden;
+}
+body .wrapper span {
+  display: block;
+}
+body header {
+  position: absolute;
+  width: 100vw;
+  top: 65px;
+  display: flex;
+  justify-content: space-between;
+  z-index: 15;
+}
+body header .logo {
+  margin-left: 80px;
+}
+body header .credits {
+  margin-right: 80px;
+}
+body .screen {
+  font-family: Px Grotesk Screen;
+  display: inline-block;
+}
+body .cta {
+  position: absolute;
+  bottom: 125px;
+  left: 50%;
+  transform: translate(-50%);
+  text-transform: uppercase;
+  z-index: 20;
+  font-size: 16px;
+  line-height: 18px;
+  letter-spacing: -1.9px;
+}
+body .content {
+  width: 100vw;
+  height: 100vh;
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 10;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+}
+body .content-title {
+  font-size: 9.375vw;
+  line-height: 9.375vw;
+  letter-spacing: -0.5vw;
+}
+body .content-title .svg,
+body .content-title span {
+  display: inline-block;
+}
+body .content-title .svg svg {
+  margin-left: 0.8854vw;
+  margin-right: 0.4854vw;
+  width: auto;
+  height: 6.40625vw;
+  fill: #fff;
+}
+body .content-title .svg g {
+  width: 9.375vw;
+  height: 6.40625vw;
+}
+body .content-sub {
+  width: 37vw;
+  display: flex;
+  font-size: 16px;
+  line-height: 18px;
+  justify-content: space-between;
+}
+body .content-sub .right {
+  text-align: right;
+}
+body .background {
+  width: 100vw;
+  height: 100vh;
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+body .background video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+/*# sourceMappingURL=style.e93aa29d.css.map */
