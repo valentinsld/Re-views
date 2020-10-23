@@ -30,9 +30,6 @@ body a:after {
 body .wrapper {
   overflow: hidden;
 }
-body .wrapper span {
-  display: block;
-}
 body header {
   position: absolute;
   width: 100vw;
@@ -43,9 +40,11 @@ body header {
 }
 body header .logo {
   margin-left: 80px;
+  overflow: hidden;
 }
 body header .credits {
   margin-right: 80px;
+  overflow: hidden;
 }
 body .screen {
   font-family: Px Grotesk Screen;
@@ -101,8 +100,32 @@ body .content-sub {
   line-height: 18px;
   justify-content: space-between;
 }
+body .content-sub span {
+  display: block;
+}
 body .content-sub .right {
   text-align: right;
+}
+body .content-2 {
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+  width: 100vw;
+  height: 100vh;
+  font-size: 3.125vw;
+  line-height: 4.166vw;
+  font-weight: 300;
+}
+body .content-2 span {
+  display: inline-block;
+}
+body .content-2 .wrapper {
+  display: block;
+  overflow: hidden;
 }
 body .background {
   width: 100vw;
@@ -116,4 +139,4 @@ body .background video {
   height: 100%;
   object-fit: cover;
 }
-/*# sourceMappingURL=style.e93aa29d.css.map */
+/*# sourceMappingURL=style.7a5f9085.css.map */

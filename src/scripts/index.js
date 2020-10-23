@@ -180,7 +180,7 @@ import joker from "../assets/joker12.json";
 let vs = {
   space: 15,
   size: 10,
-  cx: 20,
+  cx: 21,
   cy: 32,
   solo: true,
 };
@@ -499,7 +499,7 @@ let moved,
   close = false;
 window.addEventListener("mousedown", () => {
   moved = true;
-  document.querySelector("html").style.cursor = "grabbing";
+  document.querySelector("body").style.cursor = "grabbing";
 });
 document.addEventListener("keydown", function () {
   document.querySelector("body").style.cursor = "grabbing";
@@ -560,24 +560,31 @@ socket.on("msg", function (msg) {
   console.log(msg);
 });
 
-
 //        Animation
 ////////////////////////////////
 import gsap from "gsap";
 
 const tl = gsap.timeline();
 const lines = document.querySelectorAll(".content-sub .wrapper span");
+const btn = document.querySelector(".cta");
 
 gsap.set(lines, { y: "100%" });
 gsap.set(".content-title span", { y: "100%" });
 gsap.set("rect", { opacity: 0 });
+gsap.set("header a", { y: "100%" });
 gsap.set(".cta span", { opacity: 0 });
+gsap.set(".content-2 span", { y: "100%" });
 
 tl.to(
-  ".content-title span",
-  { y: "0%", duration: 1.3, stagger: 0.15, ease: "power3.out" },
+  "header a",
+  { y: "0%", duration: 1.2, stagger: 0.2, ease: "power3.out" },
   6
 )
+  .to(
+    ".content-title span",
+    { y: "0%", duration: 1.3, stagger: 0.1, ease: "power3.out" },
+    "-=1.2"
+  )
   .to(
     "rect",
     {
@@ -590,7 +597,7 @@ tl.to(
   )
   .to(
     lines,
-    { y: "0%", duration: 1.2, stagger: 0.2, ease: "power3.out" },
+    { y: "0%", duration: 1.2, stagger: 0.15, ease: "power3.out" },
     "-=1"
   )
   .to(
@@ -608,3 +615,40 @@ tl.to(
     },
     "-=1"
   );
+
+btn.addEventListener("click", (e) => {
+  console.log("click");
+  tl.to(".background", {
+    scale: 0.7,
+    opacity: 0,
+    duration: 1.4,
+    ease: "power3.inOut",
+  })
+    .to(
+      ".content",
+      { scale: 0.7, opacity: 0, duration: 1.4, ease: "power3.inOut" },
+      "-=1.1"
+    )
+    .to(btn, { opacity: 0, duration: 0.6, ease: "power3.inOut" }, "-=1")
+    .to(".content-2 span", {
+      y: "0%",
+      duration: 1.2,
+      stagger: 0.15,
+      ease: "power3.out",
+    })
+    .to(
+      ".content-2 span",
+      { y: "100%", duration: 0.8, stagger: 0.05, ease: "power3.in" },
+      "+=1"
+    )
+    .to(
+      "#joker",
+      { scale: "1", opacity: 1, duration: 0.8, stagger: 0.05, ease: "power3.in" },
+      "+=1"
+    )
+    .to(
+      "#tenet",
+      { scale: "1", opacity: 1, duration: 0.8, stagger: 0.05, ease: "power3.in" },
+      "+=1"
+    );
+});
